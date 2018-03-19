@@ -26,7 +26,7 @@ function(request){
     var cellName = query["cell"];
 
     // テスト用データ作成
-    var event = {level:"ERROR",action:"actionData",object:"objectData",result:"resultData"};
+    var event = {Type:"eventType",Object:"objectData",Info:"infoData"};
 
     try {
         // イベント受付
@@ -86,6 +86,6 @@ function(request){
     } catch (e) {
         return util.response().statusCode(e.code).responseBody(e.message).build();
     } finally {
-        
+
     }
 }

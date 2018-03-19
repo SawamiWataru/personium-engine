@@ -28,6 +28,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.util.EntityUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -106,13 +107,13 @@ public class ScriptTest extends ScriptTestBase {
         callService("changeMyPassword.js");
     }
 
-    /**
-     * Eventの登録テスト.
-     */
-    @Test
-    public final void eventTest() {
-        callService("event.js");
-    }
+//    /**
+//     * Eventの登録テスト.
+//     */
+//    @Test
+//    public final void eventTest() {
+//        callService("event.js");
+//    }
 
     /**
      * CellLevelEventの登録テスト.
@@ -405,6 +406,7 @@ public class ScriptTest extends ScriptTestBase {
     /**
      * Unit昇格のテスト.
      */
+    @Ignore
     @Test
     public final void upgradeUnitTest() {
         callService("upgradeUnit.js");

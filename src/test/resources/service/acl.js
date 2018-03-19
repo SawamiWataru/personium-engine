@@ -24,12 +24,12 @@ function(request){
     // クエリを解析し、Cell名を取得する
     var query = _p.util.queryParse(request.queryString);
     var cellName = query["cell"];
-    
+
     try {
         // ボックス作成
         var box = _p.as("client").cell(cellName).ctl.box.create({Name:"acltest", Schema:null});
-        
-     // Role作成
+
+        // Role作成
         var role1 = _p.as("client").cell(cellName).ctl.role.create({Name:"role1"});
         var role2 = _p.as("client").cell(cellName).ctl.role.create({Name:"role2"});
 
@@ -41,7 +41,7 @@ function(request){
 
         // セルにACL設定
         _p.as("client").cell(cellName).acl.set(cellAclData);
-        
+
         // ボックスのACL取得
         var resBoxAcl = box.acl.get();
 
@@ -56,20 +56,20 @@ function(request){
 //
 //        // 作成したコレクションにACLを設定
 //        box.col("col").acl.set(acl);
-//        
+//
 //        // 設定したACLを取得
 //        var res = box.col("col").acl.get();
-//        
+//
 //        // コレクション削除
 //        box.del("col");
 
         // Role削除
         _p.as("client").cell(cellName).ctl.role.del({Name:"role1"});
         _p.as("client").cell(cellName).ctl.role.del({Name:"role2"});
-        
+
         // ボックス削除
         _p.as("client").cell(cellName).ctl.box.del("acltest");
-        
+
         // assertionエラー（後処理を流したいのでこのタイミングでチェック）
         if (requireSchemaAuthz1 != "public"){
             return util.response().responseBody("requireSchemaAuthz value expected:<[public]> but was:<[" + requireSchemaAuthz1 + "]>");
@@ -80,10 +80,10 @@ function(request){
         }
         // レスポンスを返却
         return util.response().responseBody("OK").build();
-        
+
     } catch (e) {
         return util.response().statusCode(e.code).responseBody(e.message).build();
     } finally {
-        
+
     }
 }

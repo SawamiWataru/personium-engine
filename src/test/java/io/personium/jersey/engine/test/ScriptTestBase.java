@@ -16,6 +16,9 @@
  */
 package io.personium.jersey.engine.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,22 +31,20 @@ import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import com.sun.jersey.test.framework.AppDescriptor;
+import com.sun.jersey.test.framework.JerseyTest;
+import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+
 import io.personium.client.Accessor;
 import io.personium.client.Box;
 import io.personium.client.Cell;
 import io.personium.client.DaoException;
 import io.personium.client.PersoniumContext;
 import io.personium.client.ServiceCollection;
+import io.personium.client.http.HttpClientFactory;
 import io.personium.client.http.PersoniumRequestBuilder;
 import io.personium.client.http.PersoniumResponse;
-import io.personium.client.http.HttpClientFactory;
 import io.personium.engine.utils.PersoniumEngineConfig;
-import com.sun.jersey.test.framework.AppDescriptor;
-import com.sun.jersey.test.framework.JerseyTest;
-import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * engineスクリプトのテストを実行するための基底クラス.
@@ -161,7 +162,7 @@ public abstract class ScriptTestBase extends JerseyTest {
         if ("".equals(unitUserCell) || "".equals(unitUserAccount) || "".equals(unitUserPassword)) {
             // ユニットユーザーとして認証する情報がなければマスタートークンを利用する
             token = masterToken;
-            personiumCtx.setDefaultHeader("X-Personium-Unit-User", "https://example.com/test#UnitUser");
+//            personiumCtx.setDefaultHeader("X-Personium-Unit-User", "personium-localunit:/test/#UnitUser");
         } else {
             // ユニットユーザーが指定されていれば、ユニットユーザーで認証したトークンを利用する
             Accessor as = personiumCtx.asAccount(unitUserCell, unitUserAccount, unitUserPassword);
@@ -277,57 +278,69 @@ public abstract class ScriptTestBase extends JerseyTest {
         Cell cell = null;
         Box box = null;
         ServiceCollection svc = null;
+//        try {
+//            if (!testAs.asCellOwner().unit.cell.exists(name)) {
+//                return;
+//            }
+//            cell = testAs.cell(name);
+//            box = cell.box(boxName);
+//            svc = cell.box(boxName).service(serviceCollectionName);
+//        } catch (DaoException e) {
+//            fail(e.getMessage());
+//        }
+
+//        try {
+//            if (isServiceTest) {
+//                // スクリプトの削除 （Davのdelete）
+//                svc.del("testCommon.js");
+//                // サービスコレクションの削除
+//                box.del(serviceCollectionName);
+//            }
+//        } catch (DaoException e) {
+//            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
+//                fail(e.getMessage());
+//            }
+//        }
+
+//        // Box削除
+//        try {
+//            cell.box.recursiveDelete(boxName);
+//        } catch (DaoException e) {
+//            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
+//                fail(e.getMessage());
+//            }
+//        }
+//
+//        // Account削除
+//        try {
+//            cell.account.del(accountName);
+//            // サービスサブジェクトアカウントの削除
+//            cell.account.del(engineAccountName);
+//        } catch (DaoException e) {
+//            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
+//                fail(e.getMessage());
+//            }
+//        }
+//
+//        // Cell削除
+//        try {
+//            testAs.asCellOwner().unit.cell.del(name);
+//        } catch (DaoException e) {
+//            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
+//                fail(e.getMessage());
+//            }
+//        }
         try {
-            if (!testAs.asCellOwner().unit.cell.exists(name)) {
-                return;
-            }
-            cell = testAs.cell(name);
-            box = cell.box(boxName);
-            svc = cell.box(boxName).service(serviceCollectionName);
+            testAs.asCellOwner().unit.cell.recursiveDelete(name);
         } catch (DaoException e) {
+            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
+                fail(e.getMessage());
+            }
+        }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
             fail(e.getMessage());
-        }
-
-        try {
-            if (isServiceTest) {
-                // スクリプトの削除 （Davのdelete）
-                svc.del("testCommon.js");
-                // サービスコレクションの削除
-                box.del(serviceCollectionName);
-            }
-        } catch (DaoException e) {
-            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
-                fail(e.getMessage());
-            }
-        }
-
-        // Box削除
-        try {
-            cell.box.del(boxName);
-        } catch (DaoException e) {
-            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
-                fail(e.getMessage());
-            }
-        }
-
-        // Account削除
-        try {
-            cell.account.del(accountName);
-            // サービスサブジェクトアカウントの削除
-            cell.account.del(engineAccountName);
-        } catch (DaoException e) {
-            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
-                fail(e.getMessage());
-            }
-        }
-
-        // Cell削除
-        try {
-            testAs.asCellOwner().unit.cell.del(name);
-        } catch (DaoException e) {
-            if (Integer.parseInt(e.getCode()) != HttpStatus.SC_NOT_FOUND) {
-                fail(e.getMessage());
-            }
         }
     }
 

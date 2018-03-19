@@ -26,15 +26,11 @@ function(request){
     var cellName = query["cell"];
 
     // テスト用データ作成
-    var event = {level:"ERROR",action:"actionData",object:"objectData",result:"resultData"};
-    // イベント受付ではlevelに大文字のみ指定できる仕様としていたが、旧APIでは小文字も許可していたため、小文字も許可するように仕様を変更した
-    // これに伴いテストを追加
-    var eventLowerLevel = {level:"error",action:"actionData",object:"objectData",result:"resultDataLowerLevel"};
+    var event = {Type:"eventType",Object:"objectData",Info:"infoData"};
 
     try {
         // イベント登録
         _p.as("client").cell(cellName).event.post(event);
-        _p.as("client").cell(cellName).event.post(eventLowerLevel);
 
         // ログ取得(X-Personium-RequestKeyなし)_String
         var dav = _p.as("client").cell(cellName).currentLog.getString("default.log");

@@ -23,32 +23,32 @@ function(request){
 
     var code = 500;
     var message = "NG";
+//    try {
+//        new Packages.io.personium.engine.wrapper.PersoniumInputStream(request['input'].stream());
+//    } catch (e) {
+//        if (e.message !== "not found") {
+//            code = e.code;
+//            message = e.message;
+//            return util.response().statusCode(code).responseBody(message).build();
+//        }
+//    }
     try {
-        new io.personium.engine.wrapper._pInputStream(request['input'].stream());
+        new Packages.io.personium.engine.wrapper.PersoniumJSONObject();
     } catch (e) {
-    	if (e.message !== "not found") {
-        	code = e.code;
-        	message = e.message;
-    	    return util.response().statusCode(code).responseBody(message).build();
-    	}
+        if (e.message !== "not found") {
+            code = e.code;
+            message = e.message;
+            return util.response().statusCode(code).responseBody(message).build();
+        }
     }
     try {
-    	new io.personium.engine.wrapper._pJSONObject();
+        new Packages.io.personium.engine.adapter.PersoniumRequestBodyStream(request['input'].stream());
     } catch (e) {
-    	if (e.message !== "not found") {
-        	code = e.code;
-        	message = e.message;
-    	    return util.response().statusCode(code).responseBody(message).build();
-    	}
-    }
-    try {
-    	new io.personium.engine.adapter._pRequestBodyStream(request['input'].stream());
-    } catch (e) {
-    	if (e.message !== "not found") {
-        	code = e.code;
-        	message = e.message;
-    	    return util.response().statusCode(code).responseBody(message).build();
-    	}
+        if (e.message !== "not found") {
+            code = e.code;
+            message = e.message;
+            return util.response().statusCode(code).responseBody(message).build();
+        }
     }
     // レスポンスを返却
     return util.response().responseBody("OK").build();
