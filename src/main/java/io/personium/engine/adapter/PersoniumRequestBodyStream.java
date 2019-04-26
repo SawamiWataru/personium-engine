@@ -39,6 +39,17 @@ public final class PersoniumRequestBodyStream {
         this.input = input;
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        if (bufferReader != null) {
+            bufferReader.close();
+        }
+        if (input != null) {
+            input.close();
+        }
+    }
+
     /**
      * ストリーム型で返却. InputStreamのままJavaScriptに返却するとClassShutterに怒られるのでラップして返却
      * @return InputStreamのラッパーオブジェクト
@@ -80,15 +91,24 @@ public final class PersoniumRequestBodyStream {
      * @throws IOException IOException
      */
     public String readAll(String encoding) throws IOException {
-        if (this.bufferReader == null) {
-            this.bufferReader = new BufferedReader(new InputStreamReader(this.input, encoding));
+        try {
+            if (this.bufferReader == null) {
+                this.bufferReader = new BufferedReader(new InputStreamReader(this.input, encoding));
+            }
+            StringBuilder sb = new StringBuilder();
+            int chr;
+            while ((chr = this.bufferReader.read()) != -1) {
+                sb.append((char) chr);
+            }
+            return sb.toString();
+        } finally {
+            if (bufferReader != null) {
+                bufferReader.close();
+            }
+            if (input != null) {
+                input.close();
+            }
         }
-        StringBuilder sb = new StringBuilder();
-        int chr;
-        while ((chr = this.bufferReader.read()) != -1) {
-            sb.append((char) chr);
-        }
-        return sb.toString();
     }
     /**
      * 全体を読み込む.
