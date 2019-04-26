@@ -44,9 +44,11 @@ public final class PersoniumRequestBodyStream {
         super.finalize();
         if (bufferReader != null) {
             bufferReader.close();
+            bufferReader = null;
         }
         if (input != null) {
             input.close();
+            input = null;
         }
     }
 
@@ -104,9 +106,11 @@ public final class PersoniumRequestBodyStream {
         } finally {
             if (bufferReader != null) {
                 bufferReader.close();
+                bufferReader = null;
             }
             if (input != null) {
                 input.close();
+                input = null;
             }
         }
     }
