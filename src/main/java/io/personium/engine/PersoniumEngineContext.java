@@ -327,7 +327,7 @@ public class PersoniumEngineContext implements Closeable {
             timeBuilder.append(",");
             previousPhaseTime = nowTime;
         } catch (ClassNotFoundException | IOException e) {
-            throw new PersoniumEngineException("Require failed.", 500, e);
+            throw new PersoniumEngineException("UserScript exec failed.", 500, e);
         }
 
         Object fObj = scope.get("fn_jsgi", scope);

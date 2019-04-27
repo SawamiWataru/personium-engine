@@ -121,9 +121,9 @@ public class FsServiceResourceSourceManager implements ISourceManager {
 
     public void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException {
         String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
+        new File(cacheDir).mkdirs();
         String cachePath = cacheDir + File.separator + "cache";
         File cacheFile = new File(cachePath);
-        cacheFile.mkdirs();
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(cacheFile))) {
             objectOutputStream.writeObject(script);
             objectOutputStream.flush();
