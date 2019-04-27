@@ -294,7 +294,7 @@ public abstract class AbstractService {
         PersoniumEngineContext pecx = null;
         try {
             try {
-                pecx = new PersoniumEngineContext();
+                pecx = new PersoniumEngineContext(timeBuilder, requestStartTime);
             } catch (PersoniumEngineException e) {
                 return errorResponse(e);
             }
