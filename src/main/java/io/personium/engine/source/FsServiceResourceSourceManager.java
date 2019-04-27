@@ -120,9 +120,9 @@ public class FsServiceResourceSourceManager implements ISourceManager {
     }
 
     // メモリ
-    public void createCachedScript(Script script, String sourceName, Map<String, Script> engineLibCache) {
+    public void createCachedScript(Script script, String keyPrefix, String sourceName, Map<String, Script> engineLibCache) {
         String sourceDir = this.fsPath + File.separator + "__src" + File.separator + sourceName;
-        engineLibCache.put(sourceDir, script);
+        engineLibCache.put(keyPrefix + sourceDir, script);
     }
 
     // ファイル
@@ -138,10 +138,10 @@ public class FsServiceResourceSourceManager implements ISourceManager {
     }
 
     // メモリ
-    public Script getCachedScript(String sourceName, Map<String, Script> engineLibCache) {
+    public Script getCachedScript(String keyPrefix, String sourceName, Map<String, Script> engineLibCache) {
         String sourceDir = this.fsPath + File.separator + "__src" + File.separator + sourceName;
-        if (engineLibCache.containsKey(sourceDir)) {
-            return engineLibCache.get(sourceDir);
+        if (engineLibCache.containsKey(keyPrefix + sourceDir)) {
+            return engineLibCache.get(keyPrefix + sourceDir);
         }
         return null;
     }

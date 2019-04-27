@@ -64,8 +64,8 @@ public class Require {
 
         Object require;
         try {
-            this.context.requireJs(source, moduleName);
-            require = this.context.requireJs(key, moduleName);
+            this.context.requireJs(source, moduleName, "1");
+            require = this.context.requireJs(key, moduleName, "2");
         } catch (Exception e) {
             throw new PersoniumEngineException("Require failed.", 500, e);
         }
