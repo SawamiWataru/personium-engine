@@ -19,8 +19,12 @@ package io.personium.engine.source;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -35,6 +39,7 @@ import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.mozilla.javascript.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -112,6 +117,30 @@ public class FsServiceResourceSourceManager implements ISourceManager {
      */
     public String getScriptNameForServicePath(String servicePath) {
         return this.pathMap.get(servicePath);
+    }
+
+    public void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException {
+        String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
+        String cachePath = cacheDir + File.separator + "cache";
+        File cacheFile = new File(cachePath);
+        cacheFile.mkdirs();
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(cacheFile))) {
+            objectOutputStream.writeObject(script);
+            objectOutputStream.flush();
+        }
+    }
+
+    public Script getCachedScript(String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
+        String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
+        String cachePath = cacheDir + File.separator + "cache";
+        File cacheFile = new File(cachePath);
+        if (!cacheFile.exists()) {
+            return null;
+        }
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(cacheFile))) {
+            Script script = (Script) objectInputStream.readObject();
+            return script;
+        }
     }
 
     /**

@@ -18,6 +18,7 @@ package io.personium.engine;
 
 import java.io.Closeable;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -223,7 +224,8 @@ public class PersoniumEngineContext implements Closeable {
             final HttpServletResponse res,
             final InputStream is,
             final String serviceSubject,
-            long previousPhaseTime) throws PersoniumEngineException {
+            long previousPhaseTime,
+            String sourceName) throws PersoniumEngineException {
         // JSGI実行準備
         // DAOオブジェクトを生成
         PersoniumEngineDao ed = createDao(req, serviceSubject);
@@ -269,7 +271,7 @@ public class PersoniumEngineContext implements Closeable {
         try {
             Object ret;
             log.info("eval user script : script size = " + source.length());
-            ret = evalUserScript(source, jsReq, previousPhaseTime);
+            ret = evalUserScript(source, jsReq, previousPhaseTime, sourceName);
             log.info("[" + PersoniumEngineConfig.getVersion() + "] " + "<<< Request Ended ");
 
             PersoniumResponse pRes = PersoniumResponse.parseJsgiResponse(ret);
@@ -297,37 +299,38 @@ public class PersoniumEngineContext implements Closeable {
      * @throws IOException IO例外
      * @throws PersoniumEngineException
      */
-    private Object evalUserScript(final String source, JSGIRequest jsReq, long previousPhaseTime) throws PersoniumEngineException {
+    private Object evalUserScript(final String source, JSGIRequest jsReq, long previousPhaseTime, String sourceName) throws PersoniumEngineException {
 
         long nowTime = System.currentTimeMillis();
         previousPhaseTime = nowTime;
 
 //        cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
-        Script script = cx.compileString("fn_jsgi = " + source, null, 1,null);
+        Script script;
+        try {
+            script = sourceManager.getCachedScript(sourceName);
+            if (script == null) {
+                script = cx.compileString("fn_jsgi = " + source, null, 1,null);
+                sourceManager.createCachedScript(script, sourceName);
+            }
+            nowTime = System.currentTimeMillis();
+            timeBuilder.append("Phase-compile-or-cache,");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append(",");
+            previousPhaseTime = nowTime;
 
-        nowTime = System.currentTimeMillis();
-        timeBuilder.append("Phase1,");
-        timeBuilder.append(nowTime - previousPhaseTime);
-        timeBuilder.append(",");
-        previousPhaseTime = nowTime;
-
-        if (script != null) {
-            script.exec(cx, scope);
+            if (script != null) {
+                script.exec(cx, scope);
+            }
+            nowTime = System.currentTimeMillis();
+            timeBuilder.append("Phase-exec,");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append(",");
+            previousPhaseTime = nowTime;
+        } catch (ClassNotFoundException | IOException e) {
+            throw new PersoniumEngineException("Require failed.", 500, e);
         }
 
-        nowTime = System.currentTimeMillis();
-        timeBuilder.append("Phase2,");
-        timeBuilder.append(nowTime - previousPhaseTime);
-        timeBuilder.append(",");
-        previousPhaseTime = nowTime;
-
         Object fObj = scope.get("fn_jsgi", scope);
-
-        nowTime = System.currentTimeMillis();
-        timeBuilder.append("Phase3,");
-        timeBuilder.append(nowTime - previousPhaseTime);
-        timeBuilder.append(",");
-        previousPhaseTime = nowTime;
 
         Object result = null;
         if (!(fObj instanceof Function)) {
@@ -337,17 +340,13 @@ public class PersoniumEngineContext implements Closeable {
 
         Object[] functionArgs = {jsReq.getRequestObject() };
 
-        nowTime = System.currentTimeMillis();
-        timeBuilder.append("Phase4,");
-        timeBuilder.append(nowTime - previousPhaseTime);
-        timeBuilder.append(",");
-        previousPhaseTime = nowTime;
+        previousPhaseTime = System.currentTimeMillis();
 
         Function f = (Function) fObj;
         result = f.call(cx, scope, scope, functionArgs);
 
         nowTime = System.currentTimeMillis();
-        timeBuilder.append("Phase5,");
+        timeBuilder.append("Phase-call,");
         timeBuilder.append(nowTime - previousPhaseTime);
         timeBuilder.append(",");
         previousPhaseTime = nowTime;
@@ -465,11 +464,24 @@ public class PersoniumEngineContext implements Closeable {
      * @param source JavaScriptソースの中身
      * @param path JavaScriptソース名
      * @return オブジェクト
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws FileNotFoundException
      */
-    public Object requireJs(final String source, final String path) {
+    public Object requireJs(final String source, final String path) throws FileNotFoundException, ClassNotFoundException, IOException {
         long previousPhaseTime = System.currentTimeMillis();
-        Object ret = cx.evaluateString(scope, source, path, 1, null);
+
+//        Object ret = cx.evaluateString(scope, source, path, 1, null);
+        Object ret = sourceManager.getCachedScript(path);
+        if (ret == null) {
+            ret = cx.compileString("fn_jsgi = " + source, path, 1, null);
+            sourceManager.createCachedScript((Script) ret, path);
+        }
+        if (ret != null) {
+            ((Script) ret).exec(cx, scope);
+        }
         log.debug("Load JavaScript from Require Resource : " + path);
+
         StringBuilder builder = new StringBuilder();
         builder.append("========== Require timestamp. ");
         builder.append("Require,");

@@ -16,8 +16,11 @@
  */
 package io.personium.engine.source;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 
+import org.mozilla.javascript.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +58,13 @@ public class TestResourceSourceManager implements ISourceManager {
     public String getScriptNameForServicePath(String servicePath) throws PersoniumEngineException {
         // テスト用リソース動作時はURLで呼び出されたフィル名と実行スクリプト名が同一
         return servicePath;
+    }
+
+    public void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException {
+    }
+
+    public Script getCachedScript(String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
+        return null;
     }
 
     /**

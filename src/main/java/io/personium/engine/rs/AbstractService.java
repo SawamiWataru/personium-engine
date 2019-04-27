@@ -314,8 +314,9 @@ public abstract class AbstractService {
 
             // ユーザスクリプトを取得（設定及びソース）
             String source = "";
+            String sourceName = "";
             try {
-                String sourceName = this.sourceManager.getScriptNameForServicePath(targetServiceName);
+                sourceName = this.sourceManager.getScriptNameForServicePath(targetServiceName);
                 source = this.sourceManager.getSource(sourceName);
             } catch (PersoniumEngineException e) {
                 return errorResponse(e);
@@ -329,7 +330,7 @@ public abstract class AbstractService {
 
             // JSGI実行
             try {
-                response = pecx.runJsgi(source, req, res, is, this.serviceSubject, previousPhaseTime);
+                response = pecx.runJsgi(source, req, res, is, this.serviceSubject, previousPhaseTime, sourceName);
             } catch (PersoniumEngineException e) {
                 return errorResponse(e);
             } catch (Exception e) {

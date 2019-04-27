@@ -63,8 +63,12 @@ public class Require {
         source = key + " = function() {};(function(exports) {" + source + "})(" + key + ")";
 
         Object require;
-        this.context.requireJs(source, moduleName);
-        require = this.context.requireJs(key, moduleName);
+        try {
+            this.context.requireJs(source, moduleName);
+            require = this.context.requireJs(key, moduleName);
+        } catch (Exception e) {
+            throw new PersoniumEngineException("Require failed.", 500, e);
+        }
         return require;
     }
 
