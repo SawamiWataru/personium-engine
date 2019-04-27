@@ -18,6 +18,7 @@ package io.personium.engine.source;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 
 import org.mozilla.javascript.Script;
 
@@ -42,7 +43,9 @@ public interface ISourceManager {
      */
     String getScriptNameForServicePath(String servicePath) throws PersoniumEngineException;
 
+    Script getCachedScript(String sourceName, Map<String, Script> engineLibCache);
     Script getCachedScript(String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException;
+    void createCachedScript(Script script, String sourceName, Map<String, Script> engineLibCache);
     void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException;
 
     /**

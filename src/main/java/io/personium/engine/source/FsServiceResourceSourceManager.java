@@ -119,6 +119,13 @@ public class FsServiceResourceSourceManager implements ISourceManager {
         return this.pathMap.get(servicePath);
     }
 
+    // メモリ
+    public void createCachedScript(Script script, String sourceName, Map<String, Script> engineLibCache) {
+        String sourceDir = this.fsPath + File.separator + "__src" + File.separator + sourceName;
+        engineLibCache.put(sourceDir, script);
+    }
+
+    // ファイル
     public void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException {
         String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
         new File(cacheDir).mkdirs();
@@ -130,6 +137,16 @@ public class FsServiceResourceSourceManager implements ISourceManager {
         }
     }
 
+    // メモリ
+    public Script getCachedScript(String sourceName, Map<String, Script> engineLibCache) {
+        String sourceDir = this.fsPath + File.separator + "__src" + File.separator + sourceName;
+        if (engineLibCache.containsKey(sourceDir)) {
+            return engineLibCache.get(sourceDir);
+        }
+        return null;
+    }
+
+    // ファイル
     public Script getCachedScript(String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
         String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
         String cachePath = cacheDir + File.separator + "cache";
@@ -138,6 +155,7 @@ public class FsServiceResourceSourceManager implements ISourceManager {
             return null;
         }
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(cacheFile))) {
+
             Script script = (Script) objectInputStream.readObject();
             return script;
         }
