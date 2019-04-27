@@ -467,8 +467,14 @@ public class PersoniumEngineContext implements Closeable {
      * @return オブジェクト
      */
     public Object requireJs(final String source, final String path) {
+        long previousPhaseTime = System.currentTimeMillis();
         Object ret = cx.evaluateString(scope, source, path, 1, null);
         log.debug("Load JavaScript from Require Resource : " + path);
+        StringBuilder builder = new StringBuilder();
+        builder.append("========== Require timestamp. ");
+        builder.append("Require,");
+        builder.append(System.currentTimeMillis() - previousPhaseTime);
+        log.info(builder.toString());
         return ret;
     }
 
