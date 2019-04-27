@@ -95,7 +95,6 @@ public class PersoniumEngineContext implements Closeable {
 
     //XXX Debug
     private StringBuilder timeBuilder;
-    private long requestStartTime;
 
 
     static {
@@ -115,10 +114,9 @@ public class PersoniumEngineContext implements Closeable {
 
     }
 
-    public PersoniumEngineContext(StringBuilder timeBuilder, long requestStartTime) throws PersoniumEngineException {
+    public PersoniumEngineContext(StringBuilder timeBuilder) throws PersoniumEngineException {
         this();
         this.timeBuilder = timeBuilder;
-        this.requestStartTime = requestStartTime;
     }
 
     /**
@@ -224,28 +222,35 @@ public class PersoniumEngineContext implements Closeable {
             final HttpServletRequest req,
             final HttpServletResponse res,
             final InputStream is,
-            final String serviceSubject) throws PersoniumEngineException {
+            final String serviceSubject,
+            long previousPhaseTime) throws PersoniumEngineException {
         // JSGI実行準備
         // DAOオブジェクトを生成
         PersoniumEngineDao ed = createDao(req, serviceSubject);
 
+        long nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase05 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // DAOオブジェクトをJavaScriptプロパティへ設定
         javaToJs(ed, "pjvm");
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase06 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // RequireオブジェクトをJavaScriptプロパティへ設定
         javaToJs(createRequireObject(), "_require");
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase07 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // personium-dao.js を読み込み
         try {
@@ -255,9 +260,11 @@ public class PersoniumEngineContext implements Closeable {
             throw new PersoniumEngineException("Server Error", PersoniumEngineException.STATUSCODE_SERVER_ERROR, e1);
         }
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase08 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // personium-lib.js を読み込み
         try {
@@ -267,9 +274,11 @@ public class PersoniumEngineContext implements Closeable {
             throw new PersoniumEngineException("Server Error", PersoniumEngineException.STATUSCODE_SERVER_ERROR, e1);
         }
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase09 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // jsgi-lib.jsを読み込み
         try {
@@ -279,42 +288,39 @@ public class PersoniumEngineContext implements Closeable {
             throw new PersoniumEngineException("Server Error", PersoniumEngineException.STATUSCODE_SERVER_ERROR, e1);
         }
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase10 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // p名前空間に、Extensionのクラス群を定義する。
         prepareExtensionClass();
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase11 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // RequestオブジェクトをJavaScriptプロパティへ設定
         JSGIRequest jsReq = new JSGIRequest(req, new PersoniumRequestBodyStream(is));
 
+        nowTime = System.currentTimeMillis();
         timeBuilder.append("Phase12 :");
-        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-        timeBuilder.append("ms, ");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
 
         // JSGI実行
         // ユーザースクリプトを実行(eval)する
         try {
             Object ret;
             log.info("eval user script : script size = " + source.length());
-            ret = evalUserScript(source, jsReq);
+            ret = evalUserScript(source, jsReq, previousPhaseTime);
             log.info("[" + PersoniumEngineConfig.getVersion() + "] " + "<<< Request Ended ");
 
-            timeBuilder.append("Phase13 :");
-            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-            timeBuilder.append("ms, ");
-
             PersoniumResponse pRes = PersoniumResponse.parseJsgiResponse(ret);
-
-            timeBuilder.append("Phase14 :");
-            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-            timeBuilder.append("ms, ");
-
             return pRes.build();
         } catch (Error e) {
             // ユーザースクリプトのタイムアウトはINFOレベルでログ出力
@@ -339,10 +345,23 @@ public class PersoniumEngineContext implements Closeable {
      * @throws IOException IO例外
      * @throws PersoniumEngineException
      */
-    private Object evalUserScript(final String source, JSGIRequest jsReq) throws PersoniumEngineException {
+    private Object evalUserScript(final String source, JSGIRequest jsReq, long previousPhaseTime) throws PersoniumEngineException {
         cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
 
+        long nowTime = System.currentTimeMillis();
+        timeBuilder.append("Phase13 :");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
+
         Object fObj = scope.get("fn_jsgi", scope);
+
+        nowTime = System.currentTimeMillis();
+        timeBuilder.append("Phase14 :");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
+
         Object result = null;
         if (!(fObj instanceof Function)) {
             log.warn("fn_jsgi not found");
@@ -350,8 +369,22 @@ public class PersoniumEngineContext implements Closeable {
         }
 
         Object[] functionArgs = {jsReq.getRequestObject() };
+
+        nowTime = System.currentTimeMillis();
+        timeBuilder.append("Phase15 :");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
+
         Function f = (Function) fObj;
         result = f.call(cx, scope, scope, functionArgs);
+
+        nowTime = System.currentTimeMillis();
+        timeBuilder.append("Phase16 :");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append("ms,");
+        previousPhaseTime = nowTime;
+
         return result;
     }
 

@@ -245,6 +245,7 @@ public abstract class AbstractService {
 
         //XXX Debug
         long requestStartTime = System.currentTimeMillis();
+        long previousPhaseTime = System.currentTimeMillis();
         StringBuilder timeBuilder = new StringBuilder();
 
         StringBuilder msg = new StringBuilder();
@@ -294,14 +295,16 @@ public abstract class AbstractService {
         PersoniumEngineContext pecx = null;
         try {
             try {
-                pecx = new PersoniumEngineContext(timeBuilder, requestStartTime);
+                pecx = new PersoniumEngineContext(timeBuilder);
             } catch (PersoniumEngineException e) {
                 return errorResponse(e);
             }
 
+            long nowTime = System.currentTimeMillis();
             timeBuilder.append("Phase01:");
-            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-            timeBuilder.append("ms, ");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append("ms,");
+            previousPhaseTime = nowTime;
 
             // ソースに関する情報を取得
             try {
@@ -312,16 +315,20 @@ public abstract class AbstractService {
                 return errorResponse(e);
             }
 
+            nowTime = System.currentTimeMillis();
             timeBuilder.append("Phase02 :");
-            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-            timeBuilder.append("ms, ");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append("ms,");
+            previousPhaseTime = nowTime;
 
             // グローバルオブジェクトのロード
             pecx.loadGlobalObject(baseUrl, targetCell, targetSchema, targetSchema, targetServiceName);
 
+            nowTime = System.currentTimeMillis();
             timeBuilder.append("Phase03 :");
-            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-            timeBuilder.append("ms, ");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append("ms,");
+            previousPhaseTime = nowTime;
 
             // ユーザスクリプトを取得（設定及びソース）
             String source = "";
@@ -338,13 +345,15 @@ public abstract class AbstractService {
                         PersoniumEngineException.STATUSCODE_NOTFOUND));
             }
 
+            nowTime = System.currentTimeMillis();
             timeBuilder.append("Phase04 :");
-            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
-            timeBuilder.append("ms, ");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append("ms,");
+            previousPhaseTime = nowTime;
 
             // JSGI実行
             try {
-                response = pecx.runJsgi(source, req, res, is, this.serviceSubject);
+                response = pecx.runJsgi(source, req, res, is, this.serviceSubject, previousPhaseTime);
             } catch (PersoniumEngineException e) {
                 return errorResponse(e);
             } catch (Exception e) {
@@ -354,8 +363,11 @@ public abstract class AbstractService {
             }
         } finally {
             IOUtils.closeQuietly(pecx);
+            timeBuilder.append("Total :");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms");
+            log.info("========== Engine timestamp. " + timeBuilder.toString());
         }
-        log.info("========== Engine timestamp. " + timeBuilder.toString());
         return response;
     }
 
