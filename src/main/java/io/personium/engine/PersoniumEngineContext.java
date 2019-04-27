@@ -92,6 +92,12 @@ public class PersoniumEngineContext implements Closeable {
     /** ソース情報管理. */
     private ISourceManager sourceManager;
 
+
+    //XXX Debug
+    private StringBuilder timeBuilder;
+    private long requestStartTime;
+
+
     static {
         ContextFactory.initGlobal(new PersoniumJsContextFactory());
     }
@@ -107,6 +113,12 @@ public class PersoniumEngineContext implements Closeable {
 
         this.scope = cx.initStandardObjects();
 
+    }
+
+    public PersoniumEngineContext(StringBuilder timeBuilder, long requestStartTime) throws PersoniumEngineException {
+        this();
+        this.timeBuilder = timeBuilder;
+        this.requestStartTime = requestStartTime;
     }
 
     /**
@@ -217,11 +229,23 @@ public class PersoniumEngineContext implements Closeable {
         // DAOオブジェクトを生成
         PersoniumEngineDao ed = createDao(req, serviceSubject);
 
+        timeBuilder.append("Phase05 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
+
         // DAOオブジェクトをJavaScriptプロパティへ設定
         javaToJs(ed, "pjvm");
 
+        timeBuilder.append("Phase06 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
+
         // RequireオブジェクトをJavaScriptプロパティへ設定
         javaToJs(createRequireObject(), "_require");
+
+        timeBuilder.append("Phase07 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
 
         // personium-dao.js を読み込み
         try {
@@ -231,6 +255,10 @@ public class PersoniumEngineContext implements Closeable {
             throw new PersoniumEngineException("Server Error", PersoniumEngineException.STATUSCODE_SERVER_ERROR, e1);
         }
 
+        timeBuilder.append("Phase08 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
+
         // personium-lib.js を読み込み
         try {
             loadJs("personium-lib");
@@ -238,6 +266,10 @@ public class PersoniumEngineContext implements Closeable {
             log.info("runJsgi error (personium-lib load io error) ", e1);
             throw new PersoniumEngineException("Server Error", PersoniumEngineException.STATUSCODE_SERVER_ERROR, e1);
         }
+
+        timeBuilder.append("Phase09 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
 
         // jsgi-lib.jsを読み込み
         try {
@@ -247,11 +279,23 @@ public class PersoniumEngineContext implements Closeable {
             throw new PersoniumEngineException("Server Error", PersoniumEngineException.STATUSCODE_SERVER_ERROR, e1);
         }
 
+        timeBuilder.append("Phase10 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
+
         // p名前空間に、Extensionのクラス群を定義する。
         prepareExtensionClass();
 
+        timeBuilder.append("Phase11 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
+
         // RequestオブジェクトをJavaScriptプロパティへ設定
         JSGIRequest jsReq = new JSGIRequest(req, new PersoniumRequestBodyStream(is));
+
+        timeBuilder.append("Phase12 :");
+        timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+        timeBuilder.append("ms, ");
 
         // JSGI実行
         // ユーザースクリプトを実行(eval)する
@@ -261,7 +305,15 @@ public class PersoniumEngineContext implements Closeable {
             ret = evalUserScript(source, jsReq);
             log.info("[" + PersoniumEngineConfig.getVersion() + "] " + "<<< Request Ended ");
 
+            timeBuilder.append("Phase13 :");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms, ");
+
             PersoniumResponse pRes = PersoniumResponse.parseJsgiResponse(ret);
+
+            timeBuilder.append("Phase14 :");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms, ");
 
             return pRes.build();
         } catch (Error e) {

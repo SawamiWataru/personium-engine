@@ -242,6 +242,11 @@ public abstract class AbstractService {
             final HttpServletRequest req,
             final HttpServletResponse res,
             final InputStream is) {
+
+        //XXX Debug
+        long requestStartTime = System.currentTimeMillis();
+        StringBuilder timeBuilder = new StringBuilder();
+
         StringBuilder msg = new StringBuilder();
         msg.append("[" + PersoniumEngineConfig.getVersion() + "] " + ">>> Request Started ");
         msg.append(" method:");
@@ -294,6 +299,10 @@ public abstract class AbstractService {
                 return errorResponse(e);
             }
 
+            timeBuilder.append("Phase01:");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms, ");
+
             // ソースに関する情報を取得
             try {
                 this.sourceManager = this.getServiceCollectionManager();
@@ -302,8 +311,18 @@ public abstract class AbstractService {
             } catch (PersoniumEngineException e) {
                 return errorResponse(e);
             }
+
+            timeBuilder.append("Phase02 :");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms, ");
+
             // グローバルオブジェクトのロード
             pecx.loadGlobalObject(baseUrl, targetCell, targetSchema, targetSchema, targetServiceName);
+
+            timeBuilder.append("Phase03 :");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms, ");
+
             // ユーザスクリプトを取得（設定及びソース）
             String source = "";
             try {
@@ -318,6 +337,11 @@ public abstract class AbstractService {
                 return errorResponse(new PersoniumEngineException("404 Not Found (User Script)",
                         PersoniumEngineException.STATUSCODE_NOTFOUND));
             }
+
+            timeBuilder.append("Phase04 :");
+            timeBuilder.append(System.currentTimeMillis() - requestStartTime);
+            timeBuilder.append("ms, ");
+
             // JSGI実行
             try {
                 response = pecx.runJsgi(source, req, res, is, this.serviceSubject);
@@ -331,6 +355,7 @@ public abstract class AbstractService {
         } finally {
             IOUtils.closeQuietly(pecx);
         }
+        log.info("========== Engine timestamp. " + timeBuilder.toString());
         return response;
     }
 
