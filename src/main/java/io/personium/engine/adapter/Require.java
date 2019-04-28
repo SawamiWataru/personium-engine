@@ -16,6 +16,8 @@
  */
 package io.personium.engine.adapter;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
@@ -55,7 +57,7 @@ public class Require {
      * @return Require結果
      * @throws PersoniumEngineException Exception about Engine
      */
-    public Object doRequire(String moduleName) throws PersoniumEngineException {
+    public Object doRequire(String moduleName) throws FileNotFoundException, ClassNotFoundException, IOException, PersoniumEngineException {
         String source = this.sourceManager.getSource(moduleName + ".js");
         Date date = new Date();
         Long time = date.getTime();
@@ -63,12 +65,12 @@ public class Require {
         source = key + " = function() {};(function(exports) {" + source + "})(" + key + ")";
 
         Object require;
-        try {
+//        try {
             this.context.requireJs(source, moduleName, "1");
             require = this.context.requireJs(key, moduleName, "2");
-        } catch (Exception e) {
-            throw new PersoniumEngineException("Require failed.", 500, e);
-        }
+//        } catch (Exception e) {
+//            throw new PersoniumEngineException("Require failed.", 500, e);
+//        }
         return require;
     }
 
