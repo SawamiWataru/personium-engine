@@ -115,6 +115,7 @@ public class PersoniumEngineContext implements Closeable {
 
         this.scope = cx.initStandardObjects();
 
+        cx.setOptimizationLevel(-1);
     }
 
     public PersoniumEngineContext(StringBuilder timeBuilder) throws PersoniumEngineException {
@@ -309,33 +310,35 @@ public class PersoniumEngineContext implements Closeable {
 //        cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
         Script script;
 //        try {
-            script = sourceManager.getCachedScript("", sourceName, userScriptCache);
-            if (script == null) {
-                script = cx.compileString("fn_jsgi = " + source, null, 1, null);
-                sourceManager.createCachedScript(script, "", sourceName, userScriptCache);
+//        script = sourceManager.getCachedScript("", sourceName, userScriptCache);
+        script = sourceManager.getCachedScript(scope, "", sourceName);
+        if (script == null) {
+            script = cx.compileString("fn_jsgi = " + source, null, 1, null);
+//            sourceManager.createCachedScript(script, "", sourceName, userScriptCache);
+            sourceManager.createCachedScript(script, scope, "", sourceName);
 
-                nowTime = System.currentTimeMillis();
-                timeBuilder.append("Phase-compile,");
-                timeBuilder.append(nowTime - previousPhaseTime);
-                timeBuilder.append(",");
-                previousPhaseTime = nowTime;
-            } else {
-                nowTime = System.currentTimeMillis();
-                timeBuilder.append("Phase-cache,");
-                timeBuilder.append(nowTime - previousPhaseTime);
-                timeBuilder.append(",");
-                previousPhaseTime = nowTime;
-            }
-
-
-            if (script != null) {
-                script.exec(cx, scope);
-            }
             nowTime = System.currentTimeMillis();
-            timeBuilder.append("Phase-exec,");
+            timeBuilder.append("Phase-compile,");
             timeBuilder.append(nowTime - previousPhaseTime);
             timeBuilder.append(",");
             previousPhaseTime = nowTime;
+        } else {
+            nowTime = System.currentTimeMillis();
+            timeBuilder.append("Phase-cache,");
+            timeBuilder.append(nowTime - previousPhaseTime);
+            timeBuilder.append(",");
+            previousPhaseTime = nowTime;
+        }
+
+
+        if (script != null) {
+            script.exec(cx, scope);
+        }
+        nowTime = System.currentTimeMillis();
+        timeBuilder.append("Phase-exec,");
+        timeBuilder.append(nowTime - previousPhaseTime);
+        timeBuilder.append(",");
+        previousPhaseTime = nowTime;
 //        } catch (ClassNotFoundException | IOException e) {
 //            throw new PersoniumEngineException("UserScript exec failed.", 500, e);
 //        }
@@ -483,11 +486,15 @@ public class PersoniumEngineContext implements Closeable {
 
 //        Object ret = cx.evaluateString(scope, source, path, 1, null);
         StringBuilder builder = new StringBuilder();
+        // Requireは.jsがついていないのでつける
+        String jsName = path + ".js";
         Object ret = null;
-        Script script = sourceManager.getCachedScript(prefix, path, userScriptCache);
+//        Script script = sourceManager.getCachedScript(prefix, jsName, userScriptCache);
+        Script script = sourceManager.getCachedScript(scope, prefix, jsName);
         if (script == null) {
             script = cx.compileString(source, path, 1, null);
-            sourceManager.createCachedScript(script, prefix, path, userScriptCache);
+//            sourceManager.createCachedScript(script, prefix, jsName, userScriptCache);
+            sourceManager.createCachedScript(script, scope, prefix, jsName);
 
             builder.append("========== Require timestamp. ");
             builder.append("Compile,");
