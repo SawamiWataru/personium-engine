@@ -299,18 +299,18 @@ public class PersoniumEngineContext implements Closeable {
      * @throws IOException IO例外
      * @throws PersoniumEngineException
      */
-    private Object evalUserScript(final String source, JSGIRequest jsReq, long previousPhaseTime, String sourceName) throws PersoniumEngineException {
+    private Object evalUserScript(final String source, JSGIRequest jsReq, long previousPhaseTime, String sourceName) throws PersoniumEngineException, ClassNotFoundException, IOException {
 
         long nowTime = System.currentTimeMillis();
         previousPhaseTime = nowTime;
 
 //        cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
         Script script;
-        try {
-            script = sourceManager.getCachedScript(scope, "", sourceName);
+//        try {
+            script = sourceManager.getCachedScript("", sourceName, engineLibCache);
             if (script == null) {
                 script = cx.compileString("fn_jsgi = " + source, null, 1, null);
-                sourceManager.createCachedScript(script, scope, "", sourceName);
+                sourceManager.createCachedScript(script, "", sourceName, engineLibCache);
 
                 nowTime = System.currentTimeMillis();
                 timeBuilder.append("Phase-compile,");
@@ -334,9 +334,9 @@ public class PersoniumEngineContext implements Closeable {
             timeBuilder.append(nowTime - previousPhaseTime);
             timeBuilder.append(",");
             previousPhaseTime = nowTime;
-        } catch (ClassNotFoundException | IOException e) {
-            throw new PersoniumEngineException("UserScript exec failed.", 500, e);
-        }
+//        } catch (ClassNotFoundException | IOException e) {
+//            throw new PersoniumEngineException("UserScript exec failed.", 500, e);
+//        }
 
         Object fObj = scope.get("fn_jsgi", scope);
 
@@ -479,15 +479,35 @@ public class PersoniumEngineContext implements Closeable {
     public Object requireJs(final String source, final String path, String prefix) throws FileNotFoundException, ClassNotFoundException, IOException {
         long previousPhaseTime = System.currentTimeMillis();
 
-        Object ret = cx.evaluateString(scope, source, path, 1, null);
-//        Object ret = sourceManager.getCachedScript(scope, prefix, path);
-//        if (ret == null) {
-//            ret = cx.compileString(source, path, 1, null);
-//            sourceManager.createCachedScript((Script) ret, scope, prefix, path);
-//        }
-//        if (ret != null) {
-//            ((Script) ret).exec(cx, scope);
-//        }
+//        Object ret = cx.evaluateString(scope, source, path, 1, null);
+        Script ret = sourceManager.getCachedScript(prefix, path, engineLibCache);
+        if (ret == null) {
+            ret = cx.compileString(source, path, 1, null);
+            sourceManager.createCachedScript(ret, prefix, path, engineLibCache);
+        }
+        if (ret != null) {
+            ret.exec(cx, scope);
+        }
+        log.debug("Load JavaScript from Require Resource : " + path);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("========== Require timestamp. ");
+        builder.append("Require,");
+        builder.append(System.currentTimeMillis() - previousPhaseTime);
+        log.info(builder.toString());
+        return ret;
+    }
+
+    public Object requireEvaluateJs(final String source, final String path, String prefix) {
+        long previousPhaseTime = System.currentTimeMillis();
+
+//        Object ret = cx.evaluateString(scope, source, path, 1, null);
+
+        Script ret = cx.compileString(source, path, 1, null);
+        if (ret != null) {
+            ret.exec(cx, scope);
+        }
+
         log.debug("Load JavaScript from Require Resource : " + path);
 
         StringBuilder builder = new StringBuilder();

@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -155,7 +154,7 @@ public class FsServiceResourceSourceManager implements ISourceManager {
         if (!cacheFile.exists()) {
             return null;
         }
-        try (ObjectInputStream inputStream = new ScriptableInputStream(new FileInputStream(cacheFile), scope)) {
+        try (ScriptableInputStream inputStream = new ScriptableInputStream(new FileInputStream(cacheFile), scope)) {
             Object obj = inputStream.readObject();
             Script script = (Script) obj;
             return script;
