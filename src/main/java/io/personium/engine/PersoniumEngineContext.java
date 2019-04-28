@@ -72,6 +72,8 @@ public class PersoniumEngineContext implements Closeable {
     private static final String EXTENSION_SCOPE = "extension";
     private static Map<String, Script> engineLibCache = new ConcurrentHashMap<String, Script>();
 
+    private static Map<String, Script> userScriptCache = new ConcurrentHashMap<String, Script>();
+
 
     /** Cell名. */
     private String currentCellName;
@@ -307,10 +309,10 @@ public class PersoniumEngineContext implements Closeable {
 //        cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
         Script script;
 //        try {
-            script = sourceManager.getCachedScript("", sourceName, engineLibCache);
+            script = sourceManager.getCachedScript("", sourceName, userScriptCache);
             if (script == null) {
                 script = cx.compileString("fn_jsgi = " + source, null, 1, null);
-                sourceManager.createCachedScript(script, "", sourceName, engineLibCache);
+                sourceManager.createCachedScript(script, "", sourceName, userScriptCache);
 
                 nowTime = System.currentTimeMillis();
                 timeBuilder.append("Phase-compile,");
@@ -480,10 +482,10 @@ public class PersoniumEngineContext implements Closeable {
         long previousPhaseTime = System.currentTimeMillis();
 
 //        Object ret = cx.evaluateString(scope, source, path, 1, null);
-        Script ret = sourceManager.getCachedScript(prefix, path, engineLibCache);
+        Script ret = sourceManager.getCachedScript(prefix, path, userScriptCache);
         if (ret == null) {
             ret = cx.compileString(source, path, 1, null);
-            sourceManager.createCachedScript(ret, prefix, path, engineLibCache);
+            sourceManager.createCachedScript(ret, prefix, path, userScriptCache);
         }
         if (ret != null) {
             ret.exec(cx, scope);
@@ -499,7 +501,7 @@ public class PersoniumEngineContext implements Closeable {
     }
 
     public Object requireEvaluateJs(final String source, final String path, String prefix) {
-        long previousPhaseTime = System.currentTimeMillis();
+//        long previousPhaseTime = System.currentTimeMillis();
 
 //        Object ret = cx.evaluateString(scope, source, path, 1, null);
 
@@ -510,11 +512,11 @@ public class PersoniumEngineContext implements Closeable {
 
         log.debug("Load JavaScript from Require Resource : " + path);
 
-        StringBuilder builder = new StringBuilder();
-        builder.append("========== Require timestamp. ");
-        builder.append("Require,");
-        builder.append(System.currentTimeMillis() - previousPhaseTime);
-        log.info(builder.toString());
+//        StringBuilder builder = new StringBuilder();
+//        builder.append("========== Require timestamp. ");
+//        builder.append("Require,");
+//        builder.append(System.currentTimeMillis() - previousPhaseTime);
+//        log.info(builder.toString());
         return ret;
     }
 
