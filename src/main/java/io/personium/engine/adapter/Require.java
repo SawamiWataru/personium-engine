@@ -62,12 +62,16 @@ public class Require {
         Date date = new Date();
         Long time = date.getTime();
         String key = moduleName + time.toString();
-        source = key + " = function() {};(function(exports) {" + source + "})(" + key + ")";
+//        source = key + " = function() {};(function(exports) {" + source + "})(" + key + ")";
+        source = key + " = function() {};(function(exports) {" + source + "})(" + key + ");" + key;
 
         Object require;
 //        try {
-            this.context.requireJs(source, moduleName, "1");
-            require = this.context.requireJs(key, moduleName, "2");
+//        this.context.requireJs(source, moduleName, "1");
+//        require = this.context.requireJs(key, moduleName, "2");
+
+        require = this.context.requireJs(source, moduleName, "1");
+
 //        } catch (Exception e) {
 //            throw new PersoniumEngineException("Require failed.", 500, e);
 //        }
