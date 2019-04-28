@@ -306,37 +306,37 @@ public class PersoniumEngineContext implements Closeable {
 
 //        cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
         Script script;
-//        try {
-        script = sourceManager.getCachedScript("", sourceName, engineLibCache);
-        if (script == null) {
-            script = cx.compileString("fn_jsgi = " + source, null, 1,null);
-            sourceManager.createCachedScript(script, "", sourceName, engineLibCache);
+        try {
+            script = sourceManager.getCachedScript(scope, "", sourceName);
+            if (script == null) {
+                script = cx.compileString("fn_jsgi = " + source, null, 1, null);
+                sourceManager.createCachedScript(script, scope, "", sourceName);
 
+                nowTime = System.currentTimeMillis();
+                timeBuilder.append("Phase-compile,");
+                timeBuilder.append(nowTime - previousPhaseTime);
+                timeBuilder.append(",");
+                previousPhaseTime = nowTime;
+            } else {
+                nowTime = System.currentTimeMillis();
+                timeBuilder.append("Phase-cache,");
+                timeBuilder.append(nowTime - previousPhaseTime);
+                timeBuilder.append(",");
+                previousPhaseTime = nowTime;
+            }
+
+
+            if (script != null) {
+                script.exec(cx, scope);
+            }
             nowTime = System.currentTimeMillis();
-            timeBuilder.append("Phase-compile,");
+            timeBuilder.append("Phase-exec,");
             timeBuilder.append(nowTime - previousPhaseTime);
             timeBuilder.append(",");
             previousPhaseTime = nowTime;
-        } else {
-            nowTime = System.currentTimeMillis();
-            timeBuilder.append("Phase-cache,");
-            timeBuilder.append(nowTime - previousPhaseTime);
-            timeBuilder.append(",");
-            previousPhaseTime = nowTime;
+        } catch (ClassNotFoundException | IOException e) {
+            throw new PersoniumEngineException("UserScript exec failed.", 500, e);
         }
-
-
-        if (script != null) {
-            script.exec(cx, scope);
-        }
-        nowTime = System.currentTimeMillis();
-        timeBuilder.append("Phase-exec,");
-        timeBuilder.append(nowTime - previousPhaseTime);
-        timeBuilder.append(",");
-        previousPhaseTime = nowTime;
-//        } catch (ClassNotFoundException | IOException e) {
-//            throw new PersoniumEngineException("UserScript exec failed.", 500, e);
-//        }
 
         Object fObj = scope.get("fn_jsgi", scope);
 
@@ -479,15 +479,15 @@ public class PersoniumEngineContext implements Closeable {
     public Object requireJs(final String source, final String path, String prefix) throws FileNotFoundException, ClassNotFoundException, IOException {
         long previousPhaseTime = System.currentTimeMillis();
 
-//        Object ret = cx.evaluateString(scope, source, path, 1, null);
-        Object ret = sourceManager.getCachedScript(prefix, path, engineLibCache);
-        if (ret == null) {
-            ret = cx.compileString(source, path, 1, null);
-            sourceManager.createCachedScript((Script) ret, prefix, path, engineLibCache);
-        }
-        if (ret != null) {
-            ((Script) ret).exec(cx, scope);
-        }
+        Object ret = cx.evaluateString(scope, source, path, 1, null);
+//        Object ret = sourceManager.getCachedScript(scope, prefix, path);
+//        if (ret == null) {
+//            ret = cx.compileString(source, path, 1, null);
+//            sourceManager.createCachedScript((Script) ret, scope, prefix, path);
+//        }
+//        if (ret != null) {
+//            ((Script) ret).exec(cx, scope);
+//        }
         log.debug("Load JavaScript from Require Resource : " + path);
 
         StringBuilder builder = new StringBuilder();

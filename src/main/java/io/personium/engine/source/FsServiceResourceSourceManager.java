@@ -24,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -40,6 +39,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.javascript.Script;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.serialize.ScriptableInputStream;
+import org.mozilla.javascript.serialize.ScriptableOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -126,14 +128,13 @@ public class FsServiceResourceSourceManager implements ISourceManager {
     }
 
     // ファイル
-    public void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException {
+    public void createCachedScript(Script script, Scriptable scope, String keyPrefix, String sourceName) throws FileNotFoundException, IOException {
         String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
         new File(cacheDir).mkdirs();
-        String cachePath = cacheDir + File.separator + "cache";
+        String cachePath = cacheDir + File.separator + keyPrefix + "cache";
         File cacheFile = new File(cachePath);
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(cacheFile))) {
-            objectOutputStream.writeObject(script);
-            objectOutputStream.flush();
+        try (ScriptableOutputStream outputStream = new ScriptableOutputStream(new FileOutputStream(cacheFile), scope)) {
+            outputStream.writeObject(script);
         }
     }
 
@@ -147,16 +148,16 @@ public class FsServiceResourceSourceManager implements ISourceManager {
     }
 
     // ファイル
-    public Script getCachedScript(String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
+    public Script getCachedScript(Scriptable scope, String keyPrefix, String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
         String cacheDir = this.fsPath + File.separator + "__src" + File.separator + sourceName + File.separator + ".scriptcache";
-        String cachePath = cacheDir + File.separator + "cache";
+        String cachePath = cacheDir + File.separator + keyPrefix + "cache";
         File cacheFile = new File(cachePath);
         if (!cacheFile.exists()) {
             return null;
         }
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(cacheFile))) {
-
-            Script script = (Script) objectInputStream.readObject();
+        try (ObjectInputStream inputStream = new ScriptableInputStream(new FileInputStream(cacheFile), scope)) {
+            Object obj = inputStream.readObject();
+            Script script = (Script) obj;
             return script;
         }
     }

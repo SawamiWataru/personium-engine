@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.Map;
 
 import org.mozilla.javascript.Script;
+import org.mozilla.javascript.Scriptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,13 +64,13 @@ public class TestResourceSourceManager implements ISourceManager {
 
     public void createCachedScript(Script script, String keyPrefix, String sourceName, Map<String, Script> engineLibCache) {
     }
-    public void createCachedScript(Script script, String sourceName) throws FileNotFoundException, IOException {
+    public void createCachedScript(Script script, Scriptable scope, String keyPrefix, String sourceName) throws FileNotFoundException, IOException {
     }
 
     public Script getCachedScript(String keyPrefix, String sourceName, Map<String, Script> engineLibCache) {
         return null;
     }
-    public Script getCachedScript(String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
+    public Script getCachedScript(Scriptable scope, String keyPrefix, String sourceName) throws FileNotFoundException, IOException, ClassNotFoundException {
         return null;
     }
 
