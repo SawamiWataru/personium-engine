@@ -115,7 +115,7 @@ public class PersoniumEngineContext implements Closeable {
 
         this.scope = cx.initStandardObjects();
 
-        cx.setOptimizationLevel(-1);
+//        cx.setOptimizationLevel(-1);
     }
 
     public PersoniumEngineContext(StringBuilder timeBuilder) throws PersoniumEngineException {
