@@ -310,12 +310,12 @@ public class PersoniumEngineContext implements Closeable {
 //        cx.evaluateString(scope, "fn_jsgi = " + source, null, 1, null);
         Script script;
 //        try {
-//        script = sourceManager.getCachedScript("", sourceName, userScriptCache);
-        script = sourceManager.getCachedScript(scope, "", sourceName);
+        script = sourceManager.getCachedScript("", sourceName, userScriptCache);
+//        script = sourceManager.getCachedScript(scope, "", sourceName);
         if (script == null) {
             script = cx.compileString("fn_jsgi = " + source, null, 1, null);
-//            sourceManager.createCachedScript(script, "", sourceName, userScriptCache);
-            sourceManager.createCachedScript(script, scope, "", sourceName);
+            sourceManager.createCachedScript(script, "", sourceName, userScriptCache);
+//            sourceManager.createCachedScript(script, scope, "", sourceName);
 
             nowTime = System.currentTimeMillis();
             timeBuilder.append("Phase-compile,");
@@ -489,12 +489,12 @@ public class PersoniumEngineContext implements Closeable {
         // Requireは.jsがついていないのでつける
         String jsName = path + ".js";
         Object ret = null;
-//        Script script = sourceManager.getCachedScript(prefix, jsName, userScriptCache);
-        Script script = sourceManager.getCachedScript(scope, prefix, jsName);
+        Script script = sourceManager.getCachedScript(prefix, jsName, userScriptCache);
+//        Script script = sourceManager.getCachedScript(scope, prefix, jsName);
         if (script == null) {
             script = cx.compileString(source, path, 1, null);
-//            sourceManager.createCachedScript(script, prefix, jsName, userScriptCache);
-            sourceManager.createCachedScript(script, scope, prefix, jsName);
+            sourceManager.createCachedScript(script, prefix, jsName, userScriptCache);
+//            sourceManager.createCachedScript(script, scope, prefix, jsName);
 
             builder.append("========== Require timestamp. ");
             builder.append("Compile,");
